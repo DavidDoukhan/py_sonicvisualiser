@@ -32,7 +32,10 @@ setup(
   version = '0.1',
   install_requires = [
         'setuptools',
-#        'numpy',
+        'xml',
+        'bz2',
+        'wave'
+        'numpy',
 #        'mutagen',
 #        'pil',
 #        'h5py',
@@ -43,7 +46,7 @@ setup(
   platforms=['OS Independent'],
   license='Gnu Public License V2',
   classifiers = CLASSIFIERS,
-  keywords = KEYWORDS,
+  keywords = KEYWORDS.split(' '),
   packages = find_packages(),
   include_package_data = True,
   # zip_safe = False,
