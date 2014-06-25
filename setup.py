@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import versioneer
+versioneer.VCS = 'git'
+versioneer.versionfile_source = 'py_sonicvisualiser/_version.py'
+versioneer.versionfile_build = versioneer.versionfile_source
+versioneer.tag_prefix = ''
+versioneer.parentdir_prefix = 'py_sonicvisualiser-'
+
 from setuptools import setup, find_packages
 
 CLASSIFIERS = [
@@ -29,7 +37,12 @@ setup(
   long_description = open('README.md').read(),
   author = "David Doukhan",
   author_email = "david.doukhan@gmail.com",
-  version = '0.0.1',
+#  version = '0.0.1',
+
+   # versioneer
+  version=versioneer.get_version(),
+  cmdclass=versioneer.get_cmdclass(),
+
   install_requires = [
         'setuptools',
         'xml',
