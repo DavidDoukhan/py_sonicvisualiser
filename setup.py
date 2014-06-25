@@ -11,8 +11,8 @@ CLASSIFIERS = [
     'Operating System :: OS Independent',
     'Topic :: Multimedia :: Sound/Audio',
     'Topic :: Multimedia :: Sound/Audio :: Analysis',
-    'Topic :: Multimedia :: Sound/Audio :: Editors'
-    'Topic :: Multimedia :: Sound/Audio :: Speech'
+    'Topic :: Multimedia :: Sound/Audio :: Editors',
+    'Topic :: Multimedia :: Sound/Audio :: Speech',
     'Topic :: Multimedia :: Sound/Audio :: Conversion',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'Topic :: Scientific/Engineering :: Visualization',
@@ -29,7 +29,7 @@ setup(
   long_description = open('README.md').read(),
   author = "David Doukhan",
   author_email = "david.doukhan@gmail.com",
-  version = '0.1',
+  version = '0.0.1',
   install_requires = [
         'setuptools',
         'xml',
