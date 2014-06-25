@@ -2,14 +2,14 @@
 #
 # Copyright (c) 2013 David Doukhan <david.doukhan@gmail.com>
 
-# This file is part of py-sonic-visualiser.
+# This file is part of py_sonicvisualiser.
 
-# py-sonic-visualiser is free software: you can redistribute it and/or modify
+# py_sonicvisualiser is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 
-# py-sonic-visualiser is distributed in the hope that it will be useful,
+# py_sonicvisualiser is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -66,14 +66,14 @@ class ContinuousDatasetNode(xml.dom.minidom.Text):
         return t
 
 
-if __name__ == '__main__':
-    import xml.dom.minidom as XML
-    imp = XML.getDOMImplementation()
-    dt = imp.createDocumentType('sonic-visualiser', None, None)
-    doc = imp.createDocument(None,'sv', dt)
-    root = doc.documentElement
-    data = root.appendChild(doc.createElement('data'))
-    print data
-    cdn = ContinuousDatasetNode.create(doc, range(10), range(10, 20))
-    root.appendChild(cdn)
-    doc.writexml(open('/tmp/test.txt', 'w'))
+# if __name__ == '__main__':
+#     import xml.dom.minidom as XML
+#     imp = XML.getDOMImplementation()
+#     dt = imp.createDocumentType('sonic-visualiser', None, None)
+#     doc = imp.createDocument(None,'sv', dt)
+#     root = doc.documentElement
+#     data = root.appendChild(doc.createElement('data'))
+#     print data
+#     cdn = ContinuousDatasetNode.create(doc, range(10), range(10, 20))
+#     root.appendChild(cdn)
+#     doc.writexml(open('/tmp/test.txt', 'w'))

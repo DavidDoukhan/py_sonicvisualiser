@@ -2,14 +2,14 @@
 #
 # Copyright (c) 2013 David Doukhan <david.doukhan@gmail.com>
 
-# This file is part of py-sonic-visualiser.
+# This file is part of py_sonicvisualiser.
 
-# py-sonic-visualiser is free software: you can redistribute it and/or modify
+# py_sonicvisualiser is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 
-# py-sonic-visualiser is distributed in the hope that it will be useful,
+# py_sonicvisualiser is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -25,40 +25,31 @@ consisting of a reference to a wav audio sound file, and several
 annotation layers
 """
 
-#import my_minidom as XML
 import xml.dom.minidom as xml
 from bz2 import BZ2File
 from os.path import basename
 import wave
-#from xmlutils.getElementsByTagList import getElementsByTagList
 import numpy as np
-#from continuousdataset import ContinuousDataset
 from continuous_dataset_node import ContinuousDatasetNode
 
 
-
-
 class SVEnv:
-    # @classmethod
-    # def parse(cls, fname):
-    #     f = BZ2File(fname, 'r')
-    #     return XML.parse(f)
+    """
+    This class allows to generate sonic visualiser environment files
+    """
 
-    def __namefact(self, name):
-        if name not in self.__dname:
-            self.__dname[name] = 0
-            return name
-        self.__dname[name] += 1
-        return 'name <%d>' % self.__dname[name]
-
-    def __init__(self, wavpath, showspectro=False):
+    def __init__(self, wavpath):
+        """
+        Init a sonic visualiser environment structure
+        
+        :param wavpath: Full path to the wav file used in the current environment
+        :type wavpath: string
+        """
         imp = xml.getDOMImplementation()
-        #dt = imp.createDocumentType('dt1', 'dt2', 'dt3')
         dt = imp.createDocumentType('sonic-visualiser', None, None)
         self.doc = doc = imp.createDocument(None,'sv', dt)
         root = doc.documentElement
         self.__dname = dict()
-        self.showspectro = showspectro
 
         self.data = root.appendChild(doc.createElement('data'))
         self.display = root.appendChild(doc.createElement('display'))
@@ -72,17 +63,173 @@ class SVEnv:
         self.nbdata = 0
         self.__addWaveModel(wavpath)
 
-        ### add layers!!!
-        
-        # add views      
 
-        # pxml = doc.toprettyxml()
-        # print pxml
+    def add_spectrogram(self, view=None):
+        """
+        add a spectrogram layer to the environment
+
+        :param view: environment view used to display the spectrogram, if set to None, a new view is created
+        :type view: <DOM Element: view>
+        : returns: the view used to store the spectrogram
+        : rtype: <DOM Element: view>
+        """
+        spectrolayer = self.__add_spectrogram(0)
+        spectroruler = self.__add_time_ruler()
+        if view is None:
+            view = self.__add_view()
+        self.__add_layer_reference(view, spectroruler)
+        self.__add_layer_reference(view, spectrolayer)
+        return view
+
+
+
+    def add_continuous_annotations(self, x, y, colourName='Purple', colour='#c832ff', name='', view=None, vscale=None):
+        """
+        add a continous annotation layer
+
+        :param x: The temporal indices of the dataset
+        :param y: The values of the dataset
+        :param view: environment view used to display the spectrogram, if set to None, a new view is created
+        :type x: iterable
+        :type y: iterable
+        :type view: <DOM Element: view>
+        : returns: the view used to store the spectrogram
+        : rtype: <DOM Element: view>
+        """
+        
+        model = self.data.appendChild(self.doc.createElement('model'))
+        imodel = self.nbdata
+        
+        for atname, atval in [('id', imodel + 1),
+                              ('dataset', imodel),
+                              ('name', name),
+                              ('sampleRate', self.samplerate),
+                              ('start', int(min(x) * self.samplerate)),
+                              ('end', int(max(x) * self.samplerate)),
+                              ('type', 'sparse'),
+                              ('dimensions', '2'),
+                              ('resolution', '1'),
+                              ('notifyOnAdd', 'true'),
+                              ('minimum', min(y)),
+                              ('maximum', max(y)),
+                              ('units', '')
+                              ]:
+            model.setAttribute(atname, str(atval))
+
+        dataset = self.data.appendChild(self.doc.createElement('dataset'))
+        dataset.setAttribute('id', str(imodel))
+        dataset.setAttribute('dimensions', '2')
+        self.nbdata += 2
+        
+        data = dataset.appendChild(ContinuousDatasetNode.create(self.doc, map(int, np.array(x) * self.samplerate), y))
+
+        ###### add layers
+        valruler = self.__add_time_ruler()
+        vallayer = self.__add_val_layer(imodel + 1)
+        vallayer.setAttribute('colourName', colourName)
+        vallayer.setAttribute('colour', colour)
+        if vscale is None:
+            vallayer.setAttribute('verticalScale', '0')
+            vallayer.setAttribute('scaleMinimum', str(min(y)))
+            vallayer.setAttribute('scaleMaximum', str(max(y)))
+        else:
+            vallayer.setAttribute('verticalScale', '0')
+            vallayer.setAttribute('scaleMinimum', str(vscale[0]))
+            vallayer.setAttribute('scaleMaximum', str(vscale[1]))
+
+        if view is None:
+            view = self.__add_view()
+        self.__add_layer_reference(view, valruler)
+        self.__add_layer_reference(view, vallayer)
+        return view
+
+
+    def add_interval_annotations(self, temp_idx, durations, labels, values=None, colourName='Purple', colour='#c832ff', name='', view=None):
+        """
+        add a labelled interval annotation layer
+
+        :param temp_idx: The temporal indices of the invervals beginning (sec)
+        :param durations: intervals durations
+        :param labels: interval labels
+        :param values: interval numeric values, if set to None, values are set to 0
+        :param view: environment view used to display the spectrogram, if set to None, a new view is created
+
+        :type temp_idx: float container
+        :type durations: float container
+        :type labels: string contained
+        :type values: int container
+        :type view: <DOM Element: view>
+
+        : returns: the view used to store the interval annotation layer
+        : rtype: <DOM Element: view>
+        """
+        model = self.data.appendChild(self.doc.createElement('model'))
+        imodel = self.nbdata
+        for atname, atval in [('id', imodel + 1),
+                              ('dataset', imodel),
+                              ('name', name),
+                              ('sampleRate', self.samplerate),
+                              ('type', 'sparse'),
+                              ('dimensions', '3'),
+                              ('subtype', 'region'),
+                              ('resolution', '1'),
+                              ('notifyOnAdd', 'true'),
+                              ('units', ''),
+                              ('valueQuantization', '0')
+                              ]:
+            model.setAttribute(atname, str(atval))
+
+        dataset = self.data.appendChild(self.doc.createElement('dataset'))
+        dataset.setAttribute('id', str(imodel))
+        dataset.setAttribute('dimensions', '3')
+        self.nbdata += 2
+        
+        valruler = self.__add_time_ruler()
+        vallayer = self.__add_region_layer(imodel + 1, name)
+        vallayer.setAttribute('colourName', colourName)
+        vallayer.setAttribute('colour', colour)
+        
+        if view is None:
+            view = self.__add_view()
+        self.__add_layer_reference(view, valruler)
+        self.__add_layer_reference(view, vallayer)
+
+        if values is None:
+            values = ([0] * len(temp_idx))
+        for t, d, l, v in zip(temp_idx, durations, labels, values):
+            point = dataset.appendChild(self.doc.createElement('point'))
+            point.setAttribute('label', l)
+            point.setAttribute('frame', str(int(t * self.samplerate)))
+            point.setAttribute('duration', str(int(d * self.samplerate)))
+            point.setAttribute('value', str(v))
+        return view
+
+
+    def save(self, outfname):
+        """
+        Save the environment of a sv file to be used with soniv visualiser
+
+        :param outfname: full path to the file storing the environment
+        :type outfname: string
+        """
+        f = BZ2File(outfname, 'w')
+        self.doc.writexml(f, addindent='  ', newl='\n')
+        f.close()     
+
+
+
+    def __namefact(self, name):
+        if name not in self.__dname:
+            self.__dname[name] = 0
+            return name
+        self.__dname[name] += 1
+        return 'name <%d>' % self.__dname[name]
+
 
     def __add_view(self, height=177):
         view = self.display.appendChild(self.doc.createElement('view'))
         view.setAttribute('centre', str(self.nframes / 2))
-        view.setAttribute('zoom', str(2048))#str(self.nframes / self.defwidth))
+        view.setAttribute('zoom', str(2048))
         view.setAttribute('followPan', '1')
         view.setAttribute('followZoom', '1')
         view.setAttribute('tracking', 'page')
@@ -102,9 +249,6 @@ class SVEnv:
         w = wave.open(wavpath)
         
         self.nchannels = w.getnchannels()
-        # if self.nchannels > 1:
-        #     wavmodel.setAttribute('channelMode', '0')
-        #     wavmodel.setAttribute('channel', '-1')
 
         self.samplerate =  w.getframerate()
         print 'samplerate', self.samplerate
@@ -125,25 +269,11 @@ class SVEnv:
         wavetimeruler = self.__add_time_ruler()
         wavelayer = self.__add_waveform(0)
 
-
-        #if self.showspectro:
-        #spectrolayer = self.__add_spectrogram(0)
-        #spectroruler = self.__add_time_ruler()
-
         view = self.__add_view()
         self.__add_layer_reference(view, wavetimeruler)
         self.__add_layer_reference(view, wavelayer)
 
-        if self.showspectro:
-            self.add_spectrogram()
         
-    def add_spectrogram(self):
-        spectrolayer = self.__add_spectrogram(0)
-        spectroruler = self.__add_time_ruler()
-        #if self.showspectro:
-        view = self.__add_view()
-        self.__add_layer_reference(view, spectroruler)
-        self.__add_layer_reference(view, spectrolayer)
 
 
     def __add_layer_reference(self, view, layer):
@@ -225,289 +355,25 @@ class SVEnv:
         layer.setAttribute('normalizeVisibleArea', 'false')
         return layer
 
-    def add_continuous_annotations(self, x, y, colourName='Purple', colour='#c832ff', name='', view=None, vscale=None):
-        # samplerate = 16000
-        model = self.data.appendChild(self.doc.createElement('model'))
-        imodel = self.nbdata
-        
-        for atname, atval in [('id', imodel + 1),
-                              ('dataset', imodel),
-                              ('name', name),
-                              ('sampleRate', self.samplerate),
-                              ('start', int(min(x) * self.samplerate)),
-                              ('end', int(max(x) * self.samplerate)),
-                              ('type', 'sparse'),
-                              ('dimensions', '2'),
-                              ('resolution', '1'),
-                              ('notifyOnAdd', 'true'),
-                              ('minimum', min(y)),
-                              ('maximum', max(y)),
-                              ('units', '')
-                              ]:
-            model.setAttribute(atname, str(atval))
 
-        dataset = self.data.appendChild(self.doc.createElement('dataset'))
-        dataset.setAttribute('id', str(imodel))
-        dataset.setAttribute('dimensions', '2')
-        self.nbdata += 2
-        
-        #data = dataset.appendChild(self.doc.createTextNode(''))
-        #data.data = ContinuousDataset(map(int, N.array(x) * samplerate), y)
+# if __name__ == '__main__':
 
-        data = dataset.appendChild(ContinuousDatasetNode.create(self.doc, map(int, np.array(x) * self.samplerate), y))
+#     outfname = '/home/david/test.sv'
+#     wavfname = '/home/david/crepe.wav'
 
-        #print data.data, data.data.__class__
-        #exit(42)
-        # for xval, yval in zip(x,y):
-        #     point = dataset.appendChild(self.doc.createElement('point'))
-        #     point.setAttribute('label', 'New Point')
-        #     point.setAttribute('frame', int(xval * samplerate))
-        #     point.setAttribute('value', yval)
+#     outfname = '/vol/homedir/doukhan/test.sv'
+#     wavfname = '/vol/homedir/doukhan/diadems_plusieursloc.wav'
 
-
-        ###### add layers
-        valruler = self.__add_time_ruler()
-        vallayer = self.__add_val_layer(imodel + 1)
-        vallayer.setAttribute('colourName', colourName)
-        vallayer.setAttribute('colour', colour)
-        if vscale is None:
-            vallayer.setAttribute('verticalScale', '0')
-            vallayer.setAttribute('scaleMinimum', str(min(y)))
-            vallayer.setAttribute('scaleMaximum', str(max(y)))
-        else:
-            vallayer.setAttribute('verticalScale', '0')
-            vallayer.setAttribute('scaleMinimum', str(vscale[0]))
-            vallayer.setAttribute('scaleMaximum', str(vscale[1]))
-
-        ###### add views
-        if view is None:
-            view = self.__add_view()
-        self.__add_layer_reference(view, valruler)
-        #view = self.__add_view()
-        self.__add_layer_reference(view, vallayer)
-        return view
-            
-
-    def save(self, outfname):       
-        f = BZ2File(outfname, 'w')
-        self.doc.writexml(f, addindent='  ', newl='\n')
-        f.close()
-        
-
-    def add_interval_annotations(self, temp_idx, durations, labels, values=None, colourName='Purple', colour='#c832ff', name='', view=None):
-        model = self.data.appendChild(self.doc.createElement('model'))
-        imodel = self.nbdata
-        for atname, atval in [('id', imodel + 1),
-                              ('dataset', imodel),
-                              ('name', name),
-                              ('sampleRate', self.samplerate),
-                              ('type', 'sparse'),
-                              ('dimensions', '3'),
-                              ('subtype', 'region'),
-                              ('resolution', '1'),
-                              ('notifyOnAdd', 'true'),
-                              ('units', ''),
-                              ('valueQuantization', '0')
-                              ]:
-            model.setAttribute(atname, str(atval))
-
-        dataset = self.data.appendChild(self.doc.createElement('dataset'))
-        dataset.setAttribute('id', str(imodel))
-        dataset.setAttribute('dimensions', '3')
-        self.nbdata += 2
-        
-        # add layers
-        valruler = self.__add_time_ruler()
-        vallayer = self.__add_region_layer(imodel + 1, name)
-        vallayer.setAttribute('colourName', colourName)
-        vallayer.setAttribute('colour', colour)
-        
-        ###### add views
-        # if modelname == 'transcription':
-        #     view = self.__add_view(height='50')
-        # else:
-        if view is None:
-            view = self.__add_view()
-        self.__add_layer_reference(view, valruler)
-        self.__add_layer_reference(view, vallayer)
-
-        if values is None:
-            values = ([0] * len(temp_idx))
-        for t, d, l, v in zip(temp_idx, durations, labels, values):
-            point = dataset.appendChild(self.doc.createElement('point'))
-            point.setAttribute('label', l)
-            point.setAttribute('frame', str(int(t * self.samplerate)))
-            point.setAttribute('duration', str(int(d * self.samplerate)))
-            point.setAttribute('value', str(v))
-        return view
-
-
-
-        
-    def add_transcriber_layer(self, fname):
-
-        samplerate = 16000
-        colourName='Purple'
-        colour='#c832ff'
-
-        ldatasets = []
-        lmodels = []
-
-        for modelname in ['transcription', 'speaker', 'overlap']:
-            model = self.data.appendChild(self.doc.createElement('model'))
-            lmodels.append(model)
-            imodel = self.nbdata
-            for atname, atval in [('id', imodel + 1),
-                                  ('dataset', imodel),
-                                  ('name', modelname),
-                                  ('sampleRate', samplerate),
-                                  ('type', 'sparse'),
-                                  ('dimensions', '3'),
-                                  ('subtype', 'region'),
-                                  ('resolution', '1'),
-                                  ('notifyOnAdd', 'true'),
-                                  ('units', ''),
-                                  ('valueQuantization', '0')
-                                  ]:
-                model.setAttribute(atname, str(atval))
-
-            dataset = self.data.appendChild(self.doc.createElement('dataset'))
-            ldatasets.append(dataset)
-            dataset.setAttribute('id', str(imodel))
-            dataset.setAttribute('dimensions', '3')
-            self.nbdata += 2
-        
-            # add layers
-            valruler = self.__add_time_ruler()
-            vallayer = self.__add_region_layer(imodel + 1, modelname)
-            vallayer.setAttribute('colourName', colourName)
-            vallayer.setAttribute('colour', colour)
-
-            ###### add views
-            if modelname == 'transcription':
-                view = self.__add_view(height='50')
-            else:
-                view = self.__add_view()
-            self.__add_layer_reference(view, valruler)
-            self.__add_layer_reference(view, vallayer)
-
-
-        doc = xml.parse(fname)
-        assert(len(doc.getElementsByTagName('Episode')) == 1)
-        for sec in doc.getElementsByTagName('Section'):
-            sectype = sec.getAttribute('type')
-            assert(sectype in ['report', 'nontrans'])
-            if sectype != 'report':
-                continue
-            point = ldatasets[0].appendChild(self.doc.createElement('point'))
-            point.setAttribute('label', 'report')
-            framestart = int(float(sec.getAttribute('startTime')) * samplerate)
-            framedur = int(float(sec.getAttribute('endTime')) * samplerate) - framestart
-            point.setAttribute('frame', str(framestart))
-            point.setAttribute('duration', str(framedur))
-            point.setAttribute('value', '0')
-
-            for turn in sec.getElementsByTagName('Turn'):
-                assert(turn.hasAttribute('startTime'))
-                assert(turn.hasAttribute('endTime'))
-                if turn.hasAttribute('speaker'):
-                    assert(turn.attributes.length == 3)
-                    point = ldatasets[1].appendChild(self.doc.createElement('point'))
-                    point.setAttribute('label', 'speaker')
-                    framestart = int(float(turn.getAttribute('startTime')) * samplerate)
-                    framedur = int(float(turn.getAttribute('endTime')) * samplerate) - framestart
-                    point.setAttribute('frame', str(framestart))
-                    point.setAttribute('duration', str(framedur))
-                    point.setAttribute('value', turn.getAttribute('speaker')[3:])
-
-                    #print 'nboverlap', len(turn.getElementsByTagName('Overlap'))
-                    overlaps = self.__detectoverlaps(turn, getElementsByTagList(turn, ['Overlap', 'Sync']))
-                    for ovbeg, ovend, ovspkr in overlaps:
-                        point = ldatasets[2].appendChild(self.doc.createElement('point'))
-                        point.setAttribute('label', 'ovspeaker')
-                        framestart = int(float(turn.getAttribute('startTime')) * samplerate)
-                        framedur = int(float(turn.getAttribute('endTime')) * samplerate) - framestart
-                        point.setAttribute('frame', str(framestart))
-                        point.setAttribute('duration', str(framedur))
-                        point.setAttribute('value', turn.getAttribute('speaker')[3:])
-                else:
-                    assert(turn.attributes.length == 2)
-                    
-
-        for i in xrange(3):
-            model = lmodels[i]
-            dataset = ldatasets[i]
-            #print 'i', i
-            lpoints = dataset.getElementsByTagName('point')
-            #print lpoints
-            model.setAttribute('start', lpoints[0].getAttribute('frame'))
-            model.setAttribute('end', lpoints[-1].getAttribute('frame'))
-            lvals = [int(p.getAttribute('value')) for p in lpoints]
-            model.setAttribute('minimum', str(min(lvals)))
-            model.setAttribute('maximum', str(max(lvals)))
-
-
-    def __detectoverlaps(self, turn, ovlist):
-        while ovlist and ovlist[0].nodeName == 'Sync':
-            begin = ovlist.pop(0).getAttribute('time')
-        if len(ovlist) == 0:
-            return []
-        primovopen = ovlist.pop(0)
-        primovclose = ovlist.pop(0)
-        assert(primovopen.getAttribute('type') == 'primary')
-        assert(primovclose.getAttribute('type') == 'primary')
-        assert(primovopen.getAttribute('extent') == 'begin')
-        assert(primovclose.getAttribute('extent') == 'end')
-        #print 'begin', begin
-
-        if len(ovlist) > 0 and ovlist[0].nodeName == 'Overlap':
-            backopen = ovlist.pop(0)
-            backclose = ovlist.pop(0)
-            assert(backopen.getAttribute('type') == 'backchannel')
-            assert(backclose.getAttribute('type') == 'backchannel')
-            assert(backopen.getAttribute('extent') == 'begin')
-            assert(backclose.getAttribute('extent') == 'end')
-            spkr = backopen.getAttribute('speaker')
-        else:
-            # FIXME: spk -1 may be an annotation error
-            spkr = 'spk-1'
-
-        if len(ovlist) == 0:
-            end = turn.getAttribute('endTime')
-        elif ovlist[0].nodeName == 'Sync':
-            end = ovlist[0].getAttribute('time')
-        else:
-            raise NotImplementedError('Several backchannel overlaps')
-        ret = [(begin, end, spkr)]
-        ret.extend(self.__detectoverlaps(turn, ovlist))
-        return ret
-
-
-if __name__ == '__main__':
-    #import numpy as N
-    # fname = '/vol/homedir/doukhan/svtest/testSS.sv'
-    #doc = SVEnv.parse(fname)
-    #print doc.toprettyxml()
-    outfname = '/home/david/test.sv'
-    wavfname = '/home/david/crepe.wav'
-
-    t = SVEnv(wavfname)
-    t.add_spectrogram()
+#     t = SVEnv(wavfname)
+#     t.add_spectrogram()
 
     
-    # t = SVEnv('/vol/homedir/doukhan/BFMTV_BFMStory_2010-09-03_175900.wav')
-    x = np.array(range(10000, 20000, 5)) / 1000.
-    print x
-    t.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x))
-
+#     x = np.array(range(10000, 20000, 5)) / 1000.
+#     print x
+#     ca = t.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x))
+#     print ca
+#     t.add_spectrogram(view=ca)
     
-    t.add_interval_annotations([1., 5., 21.5],[3., 11., 5.],['intv1', 'mon super intv2', 'intv3'],[0, 1, 5])
+#     t.add_interval_annotations([1., 5., 21.5],[3., 11., 5.],['intv1', 'mon super intv2', 'intv3'],[0, 1, 5])
 
-    # transfname = '/home/doukhan/etape/ref/trn2/BFMTV_BFMStory_2010-09-03_175900.trs'
-    
-    # t.add_transcriber_layer(transfname)
-
-
-    # # print t.doc.toprettyxml()
-
-    t.save(outfname)
+#     t.save(outfname)
