@@ -39,11 +39,11 @@ class SVEnv:
     """
 
     def __init__(self, wavpath):
-        """
-        Init a sonic visualiser environment structure
+        """Init a sonic visualiser environment structure
         
-        :param wavpath: Full path to the wav file used in the current environment
-        :type wavpath: string
+        Args:
+        wavpath(str) Full path to the wav file used in the current environment
+
         """
         imp = xml.getDOMImplementation()
         dt = imp.createDocumentType('sonic-visualiser', None, None)
@@ -70,8 +70,10 @@ class SVEnv:
 
         :param view: environment view used to display the spectrogram, if set to None, a new view is created
         :type view: <DOM Element: view>
+
         : returns: the view used to store the spectrogram
         : rtype: <DOM Element: view>
+
         """
         spectrolayer = self.__add_spectrogram(0)
         spectroruler = self.__add_time_ruler()
@@ -93,8 +95,10 @@ class SVEnv:
         :type x: iterable
         :type y: iterable
         :type view: <DOM Element: view>
+
         : returns: the view used to store the spectrogram
         : rtype: <DOM Element: view>
+
         """
         
         model = self.data.appendChild(self.doc.createElement('model'))
