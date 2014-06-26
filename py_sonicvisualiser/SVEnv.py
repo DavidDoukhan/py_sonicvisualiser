@@ -358,26 +358,3 @@ class SVEnv:
         layer.setAttribute('normalizeColumns', 'false')
         layer.setAttribute('normalizeVisibleArea', 'false')
         return layer
-
-
-# if __name__ == '__main__':
-
-#     outfname = '/home/david/test.sv'
-#     wavfname = '/home/david/crepe.wav'
-
-#     outfname = '/vol/homedir/doukhan/test.sv'
-#     wavfname = '/vol/homedir/doukhan/diadems_plusieursloc.wav'
-
-#     t = SVEnv(wavfname)
-#     t.add_spectrogram()
-
-    
-#     x = np.array(range(10000, 20000, 5)) / 1000.
-#     print x
-#     ca = t.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x))
-#     print ca
-#     t.add_spectrogram(view=ca)
-    
-#     t.add_interval_annotations([1., 5., 21.5],[3., 11., 5.],['intv1', 'mon super intv2', 'intv3'],[0, 1, 5])
-
-#     t.save(outfname)
