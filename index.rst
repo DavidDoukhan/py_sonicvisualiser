@@ -6,35 +6,32 @@
 Welcome to py_sonicvisualiser's documentation!
 ==============================================
 
-Latest sources are available at
-.. _github: http://www.kernel.org/DavidDoukhan/pyff
+py_sonicvisualiser is a framework for manipulating environment files
+to be used with sonic visualiser, and application for viewing and analysing the contents of music audio files http://www.sonicvisualiser.org/
 
-Contents:
+This module is currently restricted to the generation of sonic visualiser environment files (export). Parsing (import) of such files will be hopefully supported in the next releases.
 
-.. toctree::
-   :maxdepth: 2
 
-automodule
+Latest sources files are available at https://github.com/DavidDoukhan/py_sonicvisualiser .
+
+Feel free to contribute if you like this project!
+
+
+SVEnv class
+===========
 
 .. automodule:: py_sonicvisualiser
-
-autoclass
 
 .. autoclass:: SVEnv
    :special-members:
    :members:
 
+Example
+=======
 
-.. literalinclude:: examples/example.py
+.. literalinclude:: examples/example1.py
    :language: python
 .. this is a comment
 .. :emphasize-lines: 12,15-18
 .. :linenos:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

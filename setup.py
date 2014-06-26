@@ -45,8 +45,8 @@ setup(
 
   install_requires = [
         'setuptools',
-        'xml',
-        'bz2',
+#        'xml',
+#        'bz2',
         'wave',
         'numpy'
         ],

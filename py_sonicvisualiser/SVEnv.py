@@ -42,7 +42,7 @@ class SVEnv:
         """Init a sonic visualiser environment structure
         
         Args:
-        wavpath(str) Full path to the wav file used in the current environment
+          wavpath(str): Full path to the wav file used in the current environment
 
         """
         imp = xml.getDOMImplementation()
@@ -67,12 +67,12 @@ class SVEnv:
     def add_spectrogram(self, view=None):
         """
         add a spectrogram layer to the environment
-
-        :param view: environment view used to display the spectrogram, if set to None, a new view is created
-        :type view: <DOM Element: view>
-
-        : returns: the view used to store the spectrogram
-        : rtype: <DOM Element: view>
+        
+        Kwargs:
+          view(<DOM Element: view>): environment view used to display the spectrogram, if set to None, a new view is created
+          
+        Returns:
+          <DOM Element: view>: the view used to store the spectrogram
 
         """
         spectrolayer = self.__add_spectrogram(0)
@@ -89,15 +89,15 @@ class SVEnv:
         """
         add a continous annotation layer
 
-        :param x: The temporal indices of the dataset
-        :param y: The values of the dataset
-        :param view: environment view used to display the spectrogram, if set to None, a new view is created
-        :type x: iterable
-        :type y: iterable
-        :type view: <DOM Element: view>
+        Args:
+          x (float iterable): temporal indices of the dataset
+          y (float iterable): values of the dataset
 
-        : returns: the view used to store the spectrogram
-        : rtype: <DOM Element: view>
+        Kwargs:
+          view (<DOM Element: view>): environment view used to display the spectrogram, if set to None, a new view is created
+
+        Returns:
+          <DOM Element: view>: the view used to store the spectrogram
 
         """
         
@@ -152,21 +152,17 @@ class SVEnv:
         """
         add a labelled interval annotation layer
 
-        :param temp_idx: The temporal indices of the invervals beginning (sec)
-        :param durations: intervals durations
-        :param labels: interval labels
-        :param values: interval numeric values, if set to None, values are set to 0
-        :param view: environment view used to display the spectrogram, if set to None, a new view is created
+        Args:
+          temp_idx (float iterable): The temporal indices of invervals
+          durations (float iterable): intervals durations
+          labels (string iterable): interval labels
+          values (int iterable): interval numeric values, if set to None, values are set to 0
 
-        :type temp_idx: float container
-        :type durations: float container
-        :type labels: string contained
-        :type values: int container
-        :type view: <DOM Element: view>
+        Kwargs:
+          view (<DOM Element: view>): environment view used to display the spectrogram, if set to None, a new view is created
 
-        : returns: the view used to store the interval annotation layer
-        : rtype: <DOM Element: view>
         """
+
         model = self.data.appendChild(self.doc.createElement('model'))
         imodel = self.nbdata
         for atname, atval in [('id', imodel + 1),
@@ -212,9 +208,9 @@ class SVEnv:
     def save(self, outfname):
         """
         Save the environment of a sv file to be used with soniv visualiser
-
-        :param outfname: full path to the file storing the environment
-        :type outfname: string
+        
+        Args:
+          outfname(str): full path to the file storing the environment
         """
         f = BZ2File(outfname, 'w')
         self.doc.writexml(f, addindent='  ', newl='\n')
@@ -253,9 +249,8 @@ class SVEnv:
         w = wave.open(wavpath)
         
         self.nchannels = w.getnchannels()
-
         self.samplerate =  w.getframerate()
-        print 'samplerate', self.samplerate
+        
         wavmodel.setAttribute('sampleRate', str(w.getframerate()))
         wavmodel.setAttribute('start', '0')
         self.nframes = w.getnframes()
