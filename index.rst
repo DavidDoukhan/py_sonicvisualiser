@@ -6,6 +6,9 @@
 Welcome to py_sonicvisualiser's documentation!
 ==============================================
 
+Latest sources are available at
+.. _github: http://www.kernel.org/DavidDoukhan/pyff
+
 Contents:
 
 .. toctree::
@@ -21,6 +24,12 @@ autoclass
    :special-members:
    :members:
 
+
+.. literalinclude:: examples/example.py
+   :language: python
+.. this is a comment
+.. :emphasize-lines: 12,15-18
+.. :linenos:
 
 Indices and tables
 ==================
