@@ -6,15 +6,7 @@
 Welcome to py_sonicvisualiser's documentation!
 ==============================================
 
-py_sonicvisualiser is a framework for manipulating environment files
-to be used with sonic visualiser, and application for viewing and analysing the contents of music audio files http://www.sonicvisualiser.org/
-
-This module is currently restricted to the generation of sonic visualiser environment files (export). Parsing (import) of such files will be hopefully supported in the next releases.
-
-
-Latest sources files are available at https://github.com/DavidDoukhan/py_sonicvisualiser .
-
-Feel free to contribute if you like this project!
+.. include:: ./README.md
 
 
 SVEnv class
@@ -35,3 +27,5 @@ Example
 .. :emphasize-lines: 12,15-18
 .. :linenos:
 
+
+.. include:: ./AUTHORS.md
