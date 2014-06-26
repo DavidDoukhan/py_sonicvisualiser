@@ -47,14 +47,8 @@ setup(
         'setuptools',
         'xml',
         'bz2',
-        'wave'
-        'numpy',
-#        'mutagen',
-#        'pil',
-#        'h5py',
-#        'yaml',
-#        'simplejson',
-#        'scipy',
+        'wave',
+        'numpy'
         ],
   platforms=['OS Independent'],
   license='Gnu Public License V2',
