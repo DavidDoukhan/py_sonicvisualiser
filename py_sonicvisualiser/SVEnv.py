@@ -25,12 +25,59 @@ consisting of a reference to a wav audio sound file, and several
 annotation layers
 """
 
+import xml.sax as sax
 import xml.dom.minidom as xml
 from bz2 import BZ2File
 from os.path import basename
 import wave
 import numpy as np
 from continuous_dataset_node import ContinuousDatasetNode
+
+
+class SVDataset:
+    def __init__(self, modelid, dimensions):
+        self.modeid = modelid
+        self.dimensions = dimensions
+        assert(dimensions == 2 or dimensions == 3)
+        self.frames = []
+        self.values = []
+        self.durations = []
+        self.labels = []
+        self.label2int = dict()
+        self.int2label = dict()
+
+    def append_point(self, attrs):
+        self.frames.append(int(attrs.getValue('frame')))
+        self.values.append(float(attrs.getValue('value')))
+        l = attrs.getValue('label')
+        if l not in self.label2int:
+            self.label2int[l] = len(self.label2int)
+            self.int2label[len(self.int2label)] = l
+        self.labels.append(self.label2int[l])
+
+
+class SVContentHandler(sax.ContentHandler):
+    def __init__(self):
+        sax.ContentHandler.__init__(self)
+        self.datasets = []
+ 
+    def startElement(self, name, attrs):
+        #print("startElement '" + name + "'" + str(attrs.items()))
+        if name == 'dataset':
+            self.datasets.append(SVDataset(attrs.getValue('id'), int(attrs.getValue('dimensions'))))
+        elif name == 'point':
+            self.datasets[-1].append_point(attrs)
+ 
+    def endElement(self, name):
+        if name == 'dataset':
+            print 'dataset parsed'
+            d = self.datasets[-1]
+            print d.frames
+            print d.values
+            print d.durations
+            print d.labels
+            print d.label2int
+            print d.int2label
 
 
 class SVEnv:
@@ -62,6 +109,12 @@ class SVEnv:
 
         self.nbdata = 0
         self.__addWaveModel(wavpath)
+
+    @staticmethod
+    def parse(svenvfname):
+        f = BZ2File(svenvfname)
+        sax.parse(f, SVContentHandler())
+        
 
 
     def add_spectrogram(self, view=None):
@@ -353,3 +406,6 @@ class SVEnv:
         layer.setAttribute('normalizeColumns', 'false')
         layer.setAttribute('normalizeVisibleArea', 'false')
         return layer
+
+if __name__ == '__main__':
+    SVEnv.parse('/home/david/test.sv')
