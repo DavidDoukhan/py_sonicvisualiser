@@ -60,29 +60,42 @@ class SVDataset:
             self.label2int[l] = len(self.label2int)
             self.int2label[len(self.int2label)] = l
         self.labels.append(self.label2int[l])
-
+        # TODO: duration management!!!!
 
 class SVContentHandler(sax.ContentHandler):
+    """
+    Goal: clone to dom at the exception of dataset nodes
+    """
     def __init__(self):
         sax.ContentHandler.__init__(self)
         self.datasets = []
-        self.domtree = None
+        imp = xml.getDOMImplementation()
+        dt = imp.createDocumentType('sonic-visualiser', None, None)
+        self.dom = imp.createDocument(None,'sv', dt)
+        self.curnode = self.dom.documentElement        
+
  
     def startElement(self, name, attrs):
         #print("startElement '" + name + "'" + str(attrs.items()))
-        if name == 'model':
-            if self.domtree is None:
-                assert(attrs.getValue('type') == 'wavefile')
-                self.domtree = SVEnv()
-        elif name == 'dataset':
+        # if name == 'model':
+        #     if self.domtree is None:
+        #         assert(attrs.getValue('type') == 'wavefile')
+        #         self.domtree = SVEnv()
+        if name == 'dataset':
             self.datasets.append(SVDataset(attrs.getValue('id'), int(attrs.getValue('dimensions'))))
         elif name == 'point':
             self.datasets[-1].append_point(attrs)
+        elif name == 'sv':
+            pass
         else:
-            if attrs.has_key('type'):
-                print ("startElement '" + name + "'" + str(attrs.getValue('type')))
-            else:
-                print("startElement NOTYPE '" + name + "'" + str(attrs.items()))
+            # if attrs.has_key('type'):
+            #     print ("startElement '" + name + "'" + str(attrs.getValue('type')))
+            # else:
+            #print("startElement NOTYPE '" + name + "'" + str(attrs.items()))
+            node = self.curnode.appendChild(self.dom.createElement(name))
+            for at, val in attrs.items():
+                node.setAttribute(at, val)
+            self.curnode = node
 
     def endElement(self, name):
         if name == 'dataset':
@@ -96,8 +109,10 @@ class SVContentHandler(sax.ContentHandler):
             # print d.int2label
         elif name == 'point':
             pass
+        elif name == 'sv':
+            pass
         else:
-            print 'end', name
+            self.curnode = self.curnode.parentNode
 
 
 class SVEnv:
@@ -133,7 +148,9 @@ class SVEnv:
     @staticmethod
     def parse(svenvfname):
         f = BZ2File(svenvfname)
-        sax.parse(f, SVContentHandler())
+        svch = SVContentHandler()
+        sax.parse(f, svch)
+        print svch.dom.toprettyxml()
         
 
 
