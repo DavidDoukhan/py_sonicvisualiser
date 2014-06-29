@@ -33,6 +33,12 @@ import wave
 import numpy as np
 from continuous_dataset_node import ContinuousDatasetNode
 
+"""
+Todo: For now wave files associated to wave models are required
+to be available on the hard disk, this should be removed:
+environment files should be manipulable without this constraint
+"""
+
 
 class SVDataset:
     def __init__(self, modelid, dimensions):
@@ -60,24 +66,38 @@ class SVContentHandler(sax.ContentHandler):
     def __init__(self):
         sax.ContentHandler.__init__(self)
         self.datasets = []
+        self.domtree = None
  
     def startElement(self, name, attrs):
         #print("startElement '" + name + "'" + str(attrs.items()))
-        if name == 'dataset':
+        if name == 'model':
+            if self.domtree is None:
+                assert(attrs.getValue('type') == 'wavefile')
+                self.domtree = SVEnv()
+        elif name == 'dataset':
             self.datasets.append(SVDataset(attrs.getValue('id'), int(attrs.getValue('dimensions'))))
         elif name == 'point':
             self.datasets[-1].append_point(attrs)
- 
+        else:
+            if attrs.has_key('type'):
+                print ("startElement '" + name + "'" + str(attrs.getValue('type')))
+            else:
+                print("startElement NOTYPE '" + name + "'" + str(attrs.items()))
+
     def endElement(self, name):
         if name == 'dataset':
             print 'dataset parsed'
             d = self.datasets[-1]
-            print d.frames
-            print d.values
-            print d.durations
-            print d.labels
-            print d.label2int
-            print d.int2label
+            # print d.frames
+            # print d.values
+            # print d.durations
+            # print d.labels
+            # print d.label2int
+            # print d.int2label
+        elif name == 'point':
+            pass
+        else:
+            print 'end', name
 
 
 class SVEnv:
