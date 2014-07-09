@@ -7,7 +7,7 @@ outsvenvfname = sys.argv[2]
 
 # init a sonic visualiser environment file corresponding
 # to the analysis of media wavfname
-sve = SVEnv(wavfname)
+sve = SVEnv.init_from_wave_file(wavfname)
 
 # append a spectrogram view
 specview = sve.add_spectrogram()

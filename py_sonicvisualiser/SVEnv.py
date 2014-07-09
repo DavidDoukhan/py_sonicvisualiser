@@ -33,13 +33,6 @@ import wave
 import numpy as np
 from continuous_dataset_node import ContinuousDatasetNode
 
-"""
-Todo: For now wave files associated to wave models are required
-to be available on the hard disk, this should be removed:
-environment files should be manipulable without this constraint
-"""
-
-
 class SVDataset:
     def __init__(self, modelid, dimensions):
         self.modeid = modelid
@@ -120,10 +113,14 @@ class SVEnv:
     This class allows to generate sonic visualiser environment files
     """
 
-    def __init__(self, wavpath):
-        """Init a sonic visualiser environment structure
+    def __init__(self, nchannels, samplerate, nframes, wavpath):
+        """Init a sonic visualiser environment structure based on
+        the attributes of the main audio file
         
         Args:
+          nchannels(int): number of channels
+          samplerate(int): media sample rate (Hz)
+          nframes(int): number of samples
           wavpath(str): Full path to the wav file used in the current environment
 
         """
@@ -143,7 +140,54 @@ class SVEnv:
 
 
         self.nbdata = 0
-        self.__addWaveModel(wavpath)
+
+        self.nchannels = nchannels
+        self.samplerate =  samplerate
+        self.nframes = nframes
+
+        self.__setMainWaveModel(wavpath)
+
+
+    @staticmethod
+    def init_from_wave_file(wavpath):
+        """Init a sonic visualiser environment structure based the analysis 
+        of the main audio file. The audio file have to be encoded in wave
+
+        Args:
+          wavpath(str): the full path to the wavfile 
+        """
+
+        w = wave.open(wavpath)       
+        nchannels = w.getnchannels()
+        samplerate =  w.getframerate()       
+        nframes = w.getnframes()
+        return SVEnv(nchannels, samplerate, nframes, wavpath)
+
+
+    # def __init__(self, wavpath):
+    #     """Init a sonic visualiser environment structure
+        
+    #     Args:
+    #       wavpath(str): Full path to the wav file used in the current environment
+
+    #     """
+    #     imp = xml.getDOMImplementation()
+    #     dt = imp.createDocumentType('sonic-visualiser', None, None)
+    #     self.doc = doc = imp.createDocument(None,'sv', dt)
+    #     root = doc.documentElement
+    #     self.__dname = dict()
+
+    #     self.data = root.appendChild(doc.createElement('data'))
+    #     self.display = root.appendChild(doc.createElement('display'))
+    #     window = self.display.appendChild(doc.createElement('window'))
+    #     self.defwidth = 900
+    #     window.setAttribute('width', str(self.defwidth))
+    #     window.setAttribute('height', str(856))
+    #     self.selections = root.appendChild(doc.createElement('selections'))
+
+
+    #     self.nbdata = 0
+    #     self.__addWaveModel(wavpath)
 
     @staticmethod
     def parse(svenvfname):
@@ -328,7 +372,7 @@ class SVEnv:
         view.setAttribute('height', '177')
         return view
 
-    def __addWaveModel(self, wavpath):
+    def __setMainWaveModel(self, wavpath):
         wavmodel = self.data.appendChild(self.doc.createElement('model'))
         self.nbdata += 1
         wavmodel.setAttribute('id', '0')
@@ -336,14 +380,16 @@ class SVEnv:
         wavmodel.setAttribute('mainModel', 'true')
         wavmodel.setAttribute('type', 'wavefile')
         wavmodel.setAttribute('file', wavpath)
-        w = wave.open(wavpath)
-        
-        self.nchannels = w.getnchannels()
-        self.samplerate =  w.getframerate()
-        
-        wavmodel.setAttribute('sampleRate', str(w.getframerate()))
+
+
+        # w = wave.open(wavpath)       
+        # self.nchannels = w.getnchannels()
+        # self.samplerate =  w.getframerate()       
+        # self.nframes = w.getnframes()
+
+        wavmodel.setAttribute('sampleRate', str(self.samplerate))
         wavmodel.setAttribute('start', '0')
-        self.nframes = w.getnframes()
+
         wavmodel.setAttribute('end', str(self.nframes))
 
         # add play parameters
@@ -445,4 +491,30 @@ class SVEnv:
         return layer
 
 if __name__ == '__main__':
-    SVEnv.parse('/home/david/test.sv')
+    #SVEnv.parse('/home/david/test.sv')
+
+    import sys
+    wavfname = sys.argv[1]
+    outsvenvfname = sys.argv[2]
+    
+    # init a sonic visualiser environment file corresponding
+    # to the analysis of media wavfname
+    sve = SVEnv.init_from_wave_file(wavfname)
+    
+    # append a spectrogram view
+    specview = sve.add_spectrogram()
+
+    # append a continuous annotation layer corresponding to a sinusoidal signal
+    # on the spectrogram view previously defined
+    x = np.array(range(10000, 20000, 5)) / 1000.
+    sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
+    
+    # append a labelled interval annotation layer on a new view
+    intvtime = [1., 5., 21.5]
+    intvdur = [3., 11., 5.]
+    intvlabel = ['myintv1', 'mywonderfull  intv2', 'intv3']
+    intvval = [0, 1, 5]
+    sve.add_interval_annotations(intvtime,intvdur,intvlabel,intvval)
+
+    # save the environment to a sonic visualiser environment file
+    sve.save(outsvenvfname)
