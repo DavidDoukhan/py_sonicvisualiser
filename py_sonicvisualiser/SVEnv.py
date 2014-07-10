@@ -25,101 +25,14 @@ consisting of a reference to a wav audio sound file, and several
 annotation layers
 """
 
-import xml.sax as sax
+
 import xml.dom.minidom as xml
 from bz2 import BZ2File
 from os.path import basename
 import wave
 import numpy as np
-#from continuous_dataset_node import ContinuousDatasetNode
 from SVDataset import SVDataset2D, SVDataset3D
-
-# class SVDataset:
-#     """
-#     sampling rate to add
-#     """
-#     def __init__(self, modelid, dimensions):
-#         self.modeid = modelid
-#         self.dimensions = dimensions
-#         assert(dimensions == 2 or dimensions == 3)
-#         self.frames = []
-#         self.values = []
-#         self.durations = []
-#         self.labels = []
-#         self.label2int = dict()
-#         self.int2label = dict()
-
-#     def append_point(self, attrs):
-#         self.frames.append(int(attrs.getValue('frame')))
-#         self.values.append(float(attrs.getValue('value')))
-#         l = attrs.getValue('label')
-#         if l not in self.label2int:
-#             self.label2int[l] = len(self.label2int)
-#             self.int2label[len(self.int2label)] = l
-#         self.labels.append(self.label2int[l])
-#         # TODO: duration management!!!!
-
-class SVContentHandler(sax.ContentHandler):
-    """
-    Goal: clone to dom at the exception of dataset nodes
-    """
-    def __init__(self):
-        sax.ContentHandler.__init__(self)
-        self.datasets = []
-        imp = xml.getDOMImplementation()
-        dt = imp.createDocumentType('sonic-visualiser', None, None)
-        self.dom = imp.createDocument(None,'sv', dt)
-        self.curnode = self.dom.documentElement        
-        self.nbdata = 0
- 
-    def startElement(self, name, attrs):
-
-        if name in ['model', 'dataset', 'layer']:
-            self.nbdata += 1
-
-        if name == 'model' and attrs.has_key('mainModel') and attrs.getValue('mainModel') == 'true':
-            self.samplerate = int(attrs.getValue('samplerate'))
-            self.nframes = int(attrs.getValue('end'))
-            self.mediafile = attrs.getValue('file')
-
-        if name == 'dataset':
-            self.datasets.append(SVDataset(attrs.getValue('id'), int(attrs.getValue('dimensions'))))
-        elif name == 'point':
-            self.datasets[-1].append_point(attrs)
-        elif name == 'sv':
-            pass
-        else:
-            node = self.curnode.appendChild(self.dom.createElement(name))
-
-            if name == 'data':
-                self.data = node
-            elif name == 'display':
-                self.display = node
-            elif name == 'selections':
-                self.selections = node
-            elif name == 'window':
-                self.defwidth = int(attrs.getValue('width'))
-
-            for at, val in attrs.items():
-                node.setAttribute(at, val)
-            self.curnode = node
-
-    def endElement(self, name):
-        if name == 'dataset':
-            print 'dataset parsed'
-            d = self.datasets[-1]
-            # print d.frames
-            # print d.values
-            # print d.durations
-            # print d.labels
-            # print d.label2int
-            # print d.int2label
-        elif name == 'point':
-            pass
-        elif name == 'sv':
-            pass
-        else:
-            self.curnode = self.curnode.parentNode
+from SVContentHandler import SVContentHandler
 
 
 class SVEnv:
