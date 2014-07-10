@@ -34,6 +34,9 @@ import numpy as np
 from continuous_dataset_node import ContinuousDatasetNode
 
 class SVDataset:
+    """
+    sampling rate to add
+    """
     def __init__(self, modelid, dimensions):
         self.modeid = modelid
         self.dimensions = dimensions
@@ -66,14 +69,18 @@ class SVContentHandler(sax.ContentHandler):
         dt = imp.createDocumentType('sonic-visualiser', None, None)
         self.dom = imp.createDocument(None,'sv', dt)
         self.curnode = self.dom.documentElement        
-
+        self.nbdata = 0
  
     def startElement(self, name, attrs):
-        #print("startElement '" + name + "'" + str(attrs.items()))
-        # if name == 'model':
-        #     if self.domtree is None:
-        #         assert(attrs.getValue('type') == 'wavefile')
-        #         self.domtree = SVEnv()
+
+        if name in ['model', 'dataset', 'layer']:
+            self.nbdata += 1
+
+        if name == 'model' and attrs.has_key('mainModel') and attrs.getValue('mainModel') == 'true':
+            self.samplerate = int(attrs.getValue('samplerate'))
+            self.nframes = int(attrs.getValue('end'))
+            self.mediafile = attrs.getValue('file')
+
         if name == 'dataset':
             self.datasets.append(SVDataset(attrs.getValue('id'), int(attrs.getValue('dimensions'))))
         elif name == 'point':
@@ -81,11 +88,17 @@ class SVContentHandler(sax.ContentHandler):
         elif name == 'sv':
             pass
         else:
-            # if attrs.has_key('type'):
-            #     print ("startElement '" + name + "'" + str(attrs.getValue('type')))
-            # else:
-            #print("startElement NOTYPE '" + name + "'" + str(attrs.items()))
             node = self.curnode.appendChild(self.dom.createElement(name))
+
+            if name == 'data':
+                self.data = node
+            elif name == 'display':
+                self.display = node
+            elif name == 'selections':
+                self.selections = node
+            elif name == 'window':
+                self.defwidth = int(attrs.getValue('width'))
+
             for at, val in attrs.items():
                 node.setAttribute(at, val)
             self.curnode = node
@@ -113,12 +126,11 @@ class SVEnv:
     This class allows to generate sonic visualiser environment files
     """
 
-    def __init__(self, nchannels, samplerate, nframes, wavpath):
+    def __init__(self, samplerate, nframes, wavpath):
         """Init a sonic visualiser environment structure based on
         the attributes of the main audio file
         
         Args:
-          nchannels(int): number of channels
           samplerate(int): media sample rate (Hz)
           nframes(int): number of samples
           wavpath(str): Full path to the wav file used in the current environment
@@ -141,7 +153,7 @@ class SVEnv:
 
         self.nbdata = 0
 
-        self.nchannels = nchannels
+        #self.nchannels = nchannels
         self.samplerate =  samplerate
         self.nframes = nframes
 
@@ -158,10 +170,10 @@ class SVEnv:
         """
 
         w = wave.open(wavpath)       
-        nchannels = w.getnchannels()
+        # nchannels = w.getnchannels()
         samplerate =  w.getframerate()       
         nframes = w.getnframes()
-        return SVEnv(nchannels, samplerate, nframes, wavpath)
+        return SVEnv(samplerate, nframes, wavpath)
 
 
     # def __init__(self, wavpath):
@@ -196,6 +208,16 @@ class SVEnv:
         sax.parse(f, svch)
         print svch.dom.toprettyxml()
         
+        ret = SVEnv(svch.samplerate, svch.nframes, svch.mediafile)
+        ret.doc = svch.dom
+        ret.data = svch.data
+        ret.display = svch.display
+        ret.selections = svch.selections
+        ret.nbdata = svch.nbdata
+        self.defwidth = svch.defwidth
+        return ret
+        # samplerate, nframes
+        # doc data display defwidth selections nbdata
 
 
     def add_spectrogram(self, view=None):
@@ -316,7 +338,7 @@ class SVEnv:
         dataset = self.data.appendChild(self.doc.createElement('dataset'))
         dataset.setAttribute('id', str(imodel))
         dataset.setAttribute('dimensions', '3')
-        self.nbdata += 2
+        self.nbdata+= 2
         
         valruler = self.__add_time_ruler()
         vallayer = self.__add_region_layer(imodel + 1, name)
@@ -491,30 +513,30 @@ class SVEnv:
         return layer
 
 if __name__ == '__main__':
-    #SVEnv.parse('/home/david/test.sv')
+    SVEnv.parse('/home/david/test.sv')
 
-    import sys
-    wavfname = sys.argv[1]
-    outsvenvfname = sys.argv[2]
+    # import sys
+    # wavfname = sys.argv[1]
+    # outsvenvfname = sys.argv[2]
     
-    # init a sonic visualiser environment file corresponding
-    # to the analysis of media wavfname
-    sve = SVEnv.init_from_wave_file(wavfname)
+    # # init a sonic visualiser environment file corresponding
+    # # to the analysis of media wavfname
+    # sve = SVEnv.init_from_wave_file(wavfname)
     
-    # append a spectrogram view
-    specview = sve.add_spectrogram()
+    # # append a spectrogram view
+    # specview = sve.add_spectrogram()
 
-    # append a continuous annotation layer corresponding to a sinusoidal signal
-    # on the spectrogram view previously defined
-    x = np.array(range(10000, 20000, 5)) / 1000.
-    sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
+    # # append a continuous annotation layer corresponding to a sinusoidal signal
+    # # on the spectrogram view previously defined
+    # x = np.array(range(10000, 20000, 5)) / 1000.
+    # sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
     
-    # append a labelled interval annotation layer on a new view
-    intvtime = [1., 5., 21.5]
-    intvdur = [3., 11., 5.]
-    intvlabel = ['myintv1', 'mywonderfull  intv2', 'intv3']
-    intvval = [0, 1, 5]
-    sve.add_interval_annotations(intvtime,intvdur,intvlabel,intvval)
+    # # append a labelled interval annotation layer on a new view
+    # intvtime = [1., 5., 21.5]
+    # intvdur = [3., 11., 5.]
+    # intvlabel = ['myintv1', 'mywonderfull  intv2', 'intv3']
+    # intvval = [0, 1, 5]
+    # sve.add_interval_annotations(intvtime,intvdur,intvlabel,intvval)
 
-    # save the environment to a sonic visualiser environment file
-    sve.save(outsvenvfname)
+    # # save the environment to a sonic visualiser environment file
+    # sve.save(outsvenvfname)

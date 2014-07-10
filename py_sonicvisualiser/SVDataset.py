@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+.# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2013 David Doukhan <david.doukhan@gmail.com>
 
@@ -64,16 +64,3 @@ class ContinuousDatasetNode(xml.dom.minidom.Text):
         t = ContinuousDatasetNode(x, y)
         t.ownerDocument = doc
         return t
-
-
-# if __name__ == '__main__':
-#     import xml.dom.minidom as XML
-#     imp = XML.getDOMImplementation()
-#     dt = imp.createDocumentType('sonic-visualiser', None, None)
-#     doc = imp.createDocument(None,'sv', dt)
-#     root = doc.documentElement
-#     data = root.appendChild(doc.createElement('data'))
-#     print data
-#     cdn = ContinuousDatasetNode.create(doc, range(10), range(10, 20))
-#     root.appendChild(cdn)
-#     doc.writexml(open('/tmp/test.txt', 'w'))
