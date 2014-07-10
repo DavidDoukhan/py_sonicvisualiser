@@ -36,7 +36,7 @@ class SVDataset2D(xml.dom.minidom.Text):
     This allows to avoid the storage of very large xml trees in RAM,
     and avoid swap 
     """
-    def __init__(self, domdoc, datasetid):
+    def __init__(self, domdoc, datasetid, samplerate):
         self.datasetid = datasetid
         self.frames = []
         self.values = []
@@ -45,6 +45,7 @@ class SVDataset2D(xml.dom.minidom.Text):
         self.int2label = dict()
         self.ownerDocument = domdoc
         self.dimensions = 2
+        self.samplerate = samplerate
 
     def set_data_from_iterable(self, frames, values, labels=None):
         """
@@ -100,9 +101,10 @@ class SVDataset2D(xml.dom.minidom.Text):
 
 
 
+
 class SVDataset3D(SVDataset2D):
-    def __init__(self, domdoc, datasetid):
-        SVDataset2D.__init__(self, domdoc, datasetid)
+    def __init__(self, domdoc, datasetid, samplerate):
+        SVDataset2D.__init__(self, domdoc, datasetid, samplerate)
         self.durations = []
         self.dimensions = 3
 

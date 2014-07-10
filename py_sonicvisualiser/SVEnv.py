@@ -108,6 +108,9 @@ class SVEnv:
         # doc data display defwidth selections nbdata
 
 
+    # def get_datasets(self):
+    #     return self.doc.getElementsByTagName('dataset')
+
     def add_spectrogram(self, view=None):
         """
         add a spectrogram layer to the environment
@@ -129,7 +132,7 @@ class SVEnv:
 
 
 
-    def add_continuous_annotations(self, x, y, colourName='Purple', colour='#c832ff', name='', view=None, vscale=None):
+    def add_continuous_annotations(self, x, y, colourName='Purple', colour='#c832ff', name='', view=None, vscale=None, presentationName=None):
         """
         add a continous annotation layer
 
@@ -172,7 +175,7 @@ class SVEnv:
         # datasetnode = SVDataset2D(self.doc, str(imodel), self.samplerate)
         # datasetnode.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
         # data = dataset.appendChild(datasetnode)
-        dataset = self.data.appendChild(SVDataset2D(self.doc, str(imodel)))
+        dataset = self.data.appendChild(SVDataset2D(self.doc, str(imodel), self.samplerate))
         dataset.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
         self.nbdata += 2
 
@@ -181,6 +184,8 @@ class SVEnv:
         vallayer = self.__add_val_layer(imodel + 1)
         vallayer.setAttribute('colourName', colourName)
         vallayer.setAttribute('colour', colour)
+        if presentationName:
+            vallayer.setAttribute('presentationName', presentationName)
         if vscale is None:
             vallayer.setAttribute('verticalScale', '0')
             vallayer.setAttribute('scaleMinimum', str(min(y)))
@@ -197,7 +202,7 @@ class SVEnv:
         return view
 
 
-    def add_interval_annotations(self, temp_idx, durations, labels, values=None, colourName='Purple', colour='#c832ff', name='', view=None):
+    def add_interval_annotations(self, temp_idx, durations, labels, values=None, colourName='Purple', colour='#c832ff', name='', view=None, presentationName = None):
         """
         add a labelled interval annotation layer
 
@@ -228,7 +233,7 @@ class SVEnv:
                               ]:
             model.setAttribute(atname, str(atval))
 
-        dataset = self.data.appendChild(SVDataset3D(self.doc, str(imodel)))
+        dataset = self.data.appendChild(SVDataset3D(self.doc, str(imodel), self.samplerate))
         if values is None:
             values = ([0] * len(temp_idx))
         dataset.set_data_from_iterable(map(int, np.array(temp_idx) * self.samplerate), values, map(int, np.array(durations) * self.samplerate), labels)
@@ -243,7 +248,9 @@ class SVEnv:
         vallayer = self.__add_region_layer(imodel + 1, name)
         vallayer.setAttribute('colourName', colourName)
         vallayer.setAttribute('colour', colour)
-        
+        if presentationName:
+            vallayer.setAttribute('presentationName', presentationName)        
+
         if view is None:
             view = self.__add_view()
         self.__add_layer_reference(view, valruler)

@@ -52,9 +52,9 @@ class SVContentHandler(sax.ContentHandler):
             dim = int(attrs.getValue('dimensions'))
             dataid = attrs.getValue('id')
             if dim == 2:
-                self.datasets.append(SVDataset2D(self.dom, dataid))
+                self.datasets.append(SVDataset2D(self.dom, dataid, self.samplerate))
             elif dim == 3:
-                self.datasets.append(SVDataset3D(self.dom, dataid))
+                self.datasets.append(SVDataset3D(self.dom, dataid, self.samplerate))
             self.curnode = self.curnode.appendChild(self.datasets[-1])
         elif name == 'point':
             self.datasets[-1].append_xml_point(attrs)
@@ -77,15 +77,6 @@ class SVContentHandler(sax.ContentHandler):
             self.curnode = node
 
     def endElement(self, name):
-        # if name == 'dataset':
-        #     print 'dataset parsed'
-        #     d = self.datasets[-1]
-        #     # print d.frames
-            # print d.values
-            # print d.durations
-            # print d.labels
-            # print d.label2int
-            # print d.int2label
         if name == 'point':
             pass
         elif name == 'sv':
