@@ -44,7 +44,7 @@ class SVContentHandler(sax.ContentHandler):
             self.nbdata += 1
 
         if name == 'model' and attrs.has_key('mainModel') and attrs.getValue('mainModel') == 'true':
-            self.samplerate = int(attrs.getValue('samplerate'))
+            self.samplerate = int(attrs.getValue('sampleRate'))
             self.nframes = int(attrs.getValue('end'))
             self.mediafile = attrs.getValue('file')
 
@@ -52,11 +52,12 @@ class SVContentHandler(sax.ContentHandler):
             dim = int(attrs.getValue('dimensions'))
             dataid = attrs.getValue('id')
             if dim == 2:
-                self.datasets.append(SVDataset2D(self.dom, dataid, self.samplerate))
+                self.datasets.append(SVDataset2D(self.dom, dataid))
             elif dim == 3:
-                self.datasets.append(SVDataset3D(self.dom, dataid, self.samplerate))
+                self.datasets.append(SVDataset3D(self.dom, dataid))
+            self.curnode = self.curnode.appendChild(self.datasets[-1])
         elif name == 'point':
-            self.datasets[-1].append_point(attrs)
+            self.datasets[-1].append_xml_point(attrs)
         elif name == 'sv':
             pass
         else:
@@ -76,16 +77,16 @@ class SVContentHandler(sax.ContentHandler):
             self.curnode = node
 
     def endElement(self, name):
-        if name == 'dataset':
-            print 'dataset parsed'
-            d = self.datasets[-1]
-            # print d.frames
+        # if name == 'dataset':
+        #     print 'dataset parsed'
+        #     d = self.datasets[-1]
+        #     # print d.frames
             # print d.values
             # print d.durations
             # print d.labels
             # print d.label2int
             # print d.int2label
-        elif name == 'point':
+        if name == 'point':
             pass
         elif name == 'sv':
             pass

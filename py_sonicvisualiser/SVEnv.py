@@ -25,7 +25,8 @@ consisting of a reference to a wav audio sound file, and several
 annotation layers
 """
 
-import xml.dom.minidom as xml
+import xml.dom.minidom as minidom
+import xml.sax as sax
 from bz2 import BZ2File
 from os.path import basename
 import wave
@@ -49,7 +50,7 @@ class SVEnv:
           wavpath(str): Full path to the wav file used in the current environment
 
         """
-        imp = xml.getDOMImplementation()
+        imp = minidom.getDOMImplementation()
         dt = imp.createDocumentType('sonic-visualiser', None, None)
         self.doc = doc = imp.createDocument(None,'sv', dt)
         root = doc.documentElement
@@ -93,7 +94,7 @@ class SVEnv:
         f = BZ2File(svenvfname)
         svch = SVContentHandler()
         sax.parse(f, svch)
-        print svch.dom.toprettyxml()
+        #print svch.dom.toprettyxml()
         
         ret = SVEnv(svch.samplerate, svch.nframes, svch.mediafile)
         ret.doc = svch.dom
@@ -101,7 +102,7 @@ class SVEnv:
         ret.display = svch.display
         ret.selections = svch.selections
         ret.nbdata = svch.nbdata
-        self.defwidth = svch.defwidth
+        ret.defwidth = svch.defwidth
         return ret
         # samplerate, nframes
         # doc data display defwidth selections nbdata
@@ -438,3 +439,7 @@ if __name__ == '__main__':
 
     # save the environment to a sonic visualiser environment file
     sve.save(outsvenvfname)
+
+    sve2 = SVEnv.parse(outsvenvfname)
+    sve2.add_continuous_annotations(x, 1 + 3 * np.cos(2 * x))
+    sve2.save('/tmp/tutu2.sv')
