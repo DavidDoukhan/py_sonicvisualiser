@@ -1,4 +1,4 @@
-.# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2013 David Doukhan <david.doukhan@gmail.com>
 
@@ -27,7 +27,8 @@ in xml.dom.minidom documents
 import xml.dom.minidom
 import collections
 
-class ContinuousDatasetNode(xml.dom.minidom.Text):
+
+class SVDataset2D(xml.dom.minidom.Text):
     """
     This class is aimed at storing large datasets in minidom documents
     datasets are stored as iterable structure (lists, numpy arrays, ...)
@@ -35,32 +36,84 @@ class ContinuousDatasetNode(xml.dom.minidom.Text):
     This allows to avoid the storage of very large xml trees in RAM,
     and avoid swap 
     """
+    def __init__(self, domdoc, modelid, samplerate):
+        self.modeid = modelid
+        self.samplerate = samplerate
+        self.frames = []
+        self.values = []
+        self.labels = []
+        self.label2int = dict()
+        self.int2label = dict()
+        self.ownerDocument = domdoc
 
-    def __init__(self, x, y):
+    def set_data_from_iterable(self, frames, values, labels=None):
         """
-        Initialize a continuous dataset structure from iterable parameters
+        Initialize a dataset structure from iterable parameters
 
         :param x: The temporal indices of the dataset
         :param y: The values of the dataset
         :type x: iterable
         :type y: iterable
         """
-        if not isinstance(x, collections.Iterable):
-            raise TypeError, "x node contents must be an iterable"
-        if not isinstance(y, collections.Iterable):
-            raise TypeError, "y node contents must be an iterable"
-        assert(len(x) == len(y))
-        self.data = (x, y)
+        if not isinstance(frames, collections.Iterable):
+            raise TypeError, "frames must be an iterable"
+        if not isinstance(values, collections.Iterable):
+            raise TypeError, "values must be an iterable"
+        assert(len(frames) == len(values))
+        self.frames = frames
+        self.values = values
+        if labels is None:
+            self.label2int['New Point'] = 0
+            self.int2label[0] = 'New Point'
+            self.labels = [0 for i in xrange(len(frames))]
+        else:
+            if not isinstance(labels, collections.Iterable):
+                raise TypeError, "labels must be an iterable"
+            for l in labels:
+                if l not in self.label2int:
+                    self.label2int[l] = len(self.label2int)
+                    self.int2label[len(self.int2label)] = l
+                self.labels.append(self.label2int[l])
+    
+    def append_xml_point(self, attrs):
+        self.frames.append(int(attrs.getValue('frame')))
+        self.values.append(float(attrs.getValue('value')))
+        l = attrs.getValue('label')
+        if l not in self.label2int:
+            self.label2int[l] = len(self.label2int)
+            self.int2label[len(self.int2label)] = l
+        self.labels.append(self.label2int[l])
+            
 
     def writexml(self, writer, indent="", addindent="", newl=""):
         """
         Write the continuous  dataset using sonic visualiser xml conventions
         """
-        for x, y in zip(self.data[0], self.data[1]):
-            writer.write('%s<point label="New Point" frame="%d" value="%f"/>%s' % (indent, x, y, newl))
+        for l, x, y in zip(self.labels, self.frames, self.values):
+            writer.write('%s<point label="%s" frame="%d" value="%f"/>%s' % (indent, self.int2label[l], x, y, newl))
 
-    @staticmethod
-    def create(doc, x, y):
-        t = ContinuousDatasetNode(x, y)
-        t.ownerDocument = doc
-        return t
+
+
+class SVDataset3D(SVDataset2D):
+    def __init__(self, domdoc, modelid, samplerate):
+        SVDataset2D.__init__(self, domdoc, modelid, samplerate)
+        self.durations = []
+
+    def set_data_from_iterable(self, frames, values, durations, labels=None):
+        SVDataset2D.set_data_from_iterable(self, frames, values, labels)
+        if not isinstance(durations, collections.Iterable):
+            raise TypeError, "durations must be an iterable"
+        assert(len(self.frames) == len(durations))
+        self.durations = durations
+
+    def append_xml_point(self, attrs):
+        SVDataset2D.append_xml_point(self, attrs)
+        self.durations.append(float(attrs.getValue('duration')))
+
+    def writexml(self, writer, indent="", addindent="", newl=""):
+        """
+        Write the continuous  dataset using sonic visualiser xml conventions
+        """
+        for l, x, y, d in zip(self.labels, self.frames, self.values, self.durations):
+            writer.write('%s<point label="%s" frame="%d" value="%f" duration="%f"/>%s' % (indent, self.int2label[l], x, y, d, newl))
+

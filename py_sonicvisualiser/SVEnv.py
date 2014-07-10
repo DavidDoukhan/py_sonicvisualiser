@@ -31,32 +31,33 @@ from bz2 import BZ2File
 from os.path import basename
 import wave
 import numpy as np
-from continuous_dataset_node import ContinuousDatasetNode
+#from continuous_dataset_node import ContinuousDatasetNode
+from SVDataset import SVDataset2D, SVDataset3D
 
-class SVDataset:
-    """
-    sampling rate to add
-    """
-    def __init__(self, modelid, dimensions):
-        self.modeid = modelid
-        self.dimensions = dimensions
-        assert(dimensions == 2 or dimensions == 3)
-        self.frames = []
-        self.values = []
-        self.durations = []
-        self.labels = []
-        self.label2int = dict()
-        self.int2label = dict()
+# class SVDataset:
+#     """
+#     sampling rate to add
+#     """
+#     def __init__(self, modelid, dimensions):
+#         self.modeid = modelid
+#         self.dimensions = dimensions
+#         assert(dimensions == 2 or dimensions == 3)
+#         self.frames = []
+#         self.values = []
+#         self.durations = []
+#         self.labels = []
+#         self.label2int = dict()
+#         self.int2label = dict()
 
-    def append_point(self, attrs):
-        self.frames.append(int(attrs.getValue('frame')))
-        self.values.append(float(attrs.getValue('value')))
-        l = attrs.getValue('label')
-        if l not in self.label2int:
-            self.label2int[l] = len(self.label2int)
-            self.int2label[len(self.int2label)] = l
-        self.labels.append(self.label2int[l])
-        # TODO: duration management!!!!
+#     def append_point(self, attrs):
+#         self.frames.append(int(attrs.getValue('frame')))
+#         self.values.append(float(attrs.getValue('value')))
+#         l = attrs.getValue('label')
+#         if l not in self.label2int:
+#             self.label2int[l] = len(self.label2int)
+#             self.int2label[len(self.int2label)] = l
+#         self.labels.append(self.label2int[l])
+#         # TODO: duration management!!!!
 
 class SVContentHandler(sax.ContentHandler):
     """
@@ -281,7 +282,9 @@ class SVEnv:
         dataset.setAttribute('dimensions', '2')
         self.nbdata += 2
         
-        data = dataset.appendChild(ContinuousDatasetNode.create(self.doc, map(int, np.array(x) * self.samplerate), y))
+        datasetnode = SVDataset2D(self.doc, str(imodel), self.samplerate)
+        datasetnode.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
+        data = dataset.appendChild(datasetnode)
 
         ###### add layers
         valruler = self.__add_time_ruler()
@@ -513,30 +516,30 @@ class SVEnv:
         return layer
 
 if __name__ == '__main__':
-    SVEnv.parse('/home/david/test.sv')
+    # SVEnv.parse('/home/david/test.sv')
 
-    # import sys
-    # wavfname = sys.argv[1]
-    # outsvenvfname = sys.argv[2]
+    #import sys
+    wavfname = '/vol/homedir/doukhan/BFMTV_BFMStory_2010-09-03_175900.wav'
+    outsvenvfname = '/tmp/tutu.sv'
     
-    # # init a sonic visualiser environment file corresponding
-    # # to the analysis of media wavfname
-    # sve = SVEnv.init_from_wave_file(wavfname)
+    # init a sonic visualiser environment file corresponding
+    # to the analysis of media wavfname
+    sve = SVEnv.init_from_wave_file(wavfname)
     
-    # # append a spectrogram view
-    # specview = sve.add_spectrogram()
+    # append a spectrogram view
+    specview = sve.add_spectrogram()
 
-    # # append a continuous annotation layer corresponding to a sinusoidal signal
-    # # on the spectrogram view previously defined
-    # x = np.array(range(10000, 20000, 5)) / 1000.
-    # sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
+    # append a continuous annotation layer corresponding to a sinusoidal signal
+    # on the spectrogram view previously defined
+    x = np.array(range(10000, 20000, 5)) / 1000.
+    sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
     
-    # # append a labelled interval annotation layer on a new view
-    # intvtime = [1., 5., 21.5]
-    # intvdur = [3., 11., 5.]
-    # intvlabel = ['myintv1', 'mywonderfull  intv2', 'intv3']
-    # intvval = [0, 1, 5]
-    # sve.add_interval_annotations(intvtime,intvdur,intvlabel,intvval)
+    # append a labelled interval annotation layer on a new view
+    intvtime = [1., 5., 21.5]
+    intvdur = [3., 11., 5.]
+    intvlabel = ['myintv1', 'mywonderfull  intv2', 'intv3']
+    intvval = [0, 1, 5]
+    sve.add_interval_annotations(intvtime,intvdur,intvlabel,intvval)
 
-    # # save the environment to a sonic visualiser environment file
-    # sve.save(outsvenvfname)
+    # save the environment to a sonic visualiser environment file
+    sve.save(outsvenvfname)
