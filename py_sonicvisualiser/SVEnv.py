@@ -25,7 +25,6 @@ consisting of a reference to a wav audio sound file, and several
 annotation layers
 """
 
-
 import xml.dom.minidom as xml
 from bz2 import BZ2File
 from os.path import basename
@@ -88,32 +87,6 @@ class SVEnv:
         samplerate =  w.getframerate()       
         nframes = w.getnframes()
         return SVEnv(samplerate, nframes, wavpath)
-
-
-    # def __init__(self, wavpath):
-    #     """Init a sonic visualiser environment structure
-        
-    #     Args:
-    #       wavpath(str): Full path to the wav file used in the current environment
-
-    #     """
-    #     imp = xml.getDOMImplementation()
-    #     dt = imp.createDocumentType('sonic-visualiser', None, None)
-    #     self.doc = doc = imp.createDocument(None,'sv', dt)
-    #     root = doc.documentElement
-    #     self.__dname = dict()
-
-    #     self.data = root.appendChild(doc.createElement('data'))
-    #     self.display = root.appendChild(doc.createElement('display'))
-    #     window = self.display.appendChild(doc.createElement('window'))
-    #     self.defwidth = 900
-    #     window.setAttribute('width', str(self.defwidth))
-    #     window.setAttribute('height', str(856))
-    #     self.selections = root.appendChild(doc.createElement('selections'))
-
-
-    #     self.nbdata = 0
-    #     self.__addWaveModel(wavpath)
 
     @staticmethod
     def parse(svenvfname):
@@ -190,14 +163,17 @@ class SVEnv:
                               ]:
             model.setAttribute(atname, str(atval))
 
-        dataset = self.data.appendChild(self.doc.createElement('dataset'))
-        dataset.setAttribute('id', str(imodel))
-        dataset.setAttribute('dimensions', '2')
-        self.nbdata += 2
+        # dataset = self.data.appendChild(self.doc.createElement('dataset'))
+        # dataset.setAttribute('id', str(imodel))
+        # dataset.setAttribute('dimensions', '2')
+        # self.nbdata += 2
         
-        datasetnode = SVDataset2D(self.doc, str(imodel), self.samplerate)
-        datasetnode.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
-        data = dataset.appendChild(datasetnode)
+        # datasetnode = SVDataset2D(self.doc, str(imodel), self.samplerate)
+        # datasetnode.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
+        # data = dataset.appendChild(datasetnode)
+        dataset = self.data.appendChild(SVDataset2D(self.doc, str(imodel)))
+        dataset.set_data_from_iterable(map(int, np.array(x) * self.samplerate), y)
+        self.nbdata += 2
 
         ###### add layers
         valruler = self.__add_time_ruler()
@@ -251,9 +227,15 @@ class SVEnv:
                               ]:
             model.setAttribute(atname, str(atval))
 
-        dataset = self.data.appendChild(self.doc.createElement('dataset'))
-        dataset.setAttribute('id', str(imodel))
-        dataset.setAttribute('dimensions', '3')
+        dataset = self.data.appendChild(SVDataset3D(self.doc, str(imodel)))
+        if values is None:
+            values = ([0] * len(temp_idx))
+        dataset.set_data_from_iterable(map(int, np.array(temp_idx) * self.samplerate), values, map(int, np.array(durations) * self.samplerate), labels)
+        
+
+        # dataset = self.data.appendChild(self.doc.createElement('dataset'))
+        # dataset.setAttribute('id', str(imodel))
+        # dataset.setAttribute('dimensions', '3')
         self.nbdata+= 2
         
         valruler = self.__add_time_ruler()
@@ -266,14 +248,14 @@ class SVEnv:
         self.__add_layer_reference(view, valruler)
         self.__add_layer_reference(view, vallayer)
 
-        if values is None:
-            values = ([0] * len(temp_idx))
-        for t, d, l, v in zip(temp_idx, durations, labels, values):
-            point = dataset.appendChild(self.doc.createElement('point'))
-            point.setAttribute('label', l)
-            point.setAttribute('frame', str(int(t * self.samplerate)))
-            point.setAttribute('duration', str(int(d * self.samplerate)))
-            point.setAttribute('value', str(v))
+        # if values is None:
+        #     values = ([0] * len(temp_idx))
+        # for t, d, l, v in zip(temp_idx, durations, labels, values):
+        #     point = dataset.appendChild(self.doc.createElement('point'))
+        #     point.setAttribute('label', l)
+        #     point.setAttribute('frame', str(int(t * self.samplerate)))
+        #     point.setAttribute('duration', str(int(d * self.samplerate)))
+        #     point.setAttribute('value', str(v))
         return view
 
 

@@ -36,15 +36,15 @@ class SVDataset2D(xml.dom.minidom.Text):
     This allows to avoid the storage of very large xml trees in RAM,
     and avoid swap 
     """
-    def __init__(self, domdoc, modelid, samplerate):
-        self.modeid = modelid
-        self.samplerate = samplerate
+    def __init__(self, domdoc, datasetid):
+        self.datasetid = datasetid
         self.frames = []
         self.values = []
         self.labels = []
         self.label2int = dict()
         self.int2label = dict()
         self.ownerDocument = domdoc
+        self.dimensions = 2
 
     def set_data_from_iterable(self, frames, values, labels=None):
         """
@@ -89,15 +89,22 @@ class SVDataset2D(xml.dom.minidom.Text):
         """
         Write the continuous  dataset using sonic visualiser xml conventions
         """
+        # dataset = self.data.appendChild(self.doc.createElement('dataset'))
+        # dataset.setAttribute('id', str(imodel))
+        # dataset.setAttribute('dimensions', '2')
+        writer.write('%s<dataset id="%s" dimensions="%s">%s' % (indent, self.datasetid, self.dimensions, newl))
+        indent2 = indent + addindent
         for l, x, y in zip(self.labels, self.frames, self.values):
-            writer.write('%s<point label="%s" frame="%d" value="%f"/>%s' % (indent, self.int2label[l], x, y, newl))
+            writer.write('%s<point label="%s" frame="%d" value="%f"/>%s' % (indent2, self.int2label[l], x, y, newl))
+        writer.write('%s</dataset>%s' % (indent, newl))
 
 
 
 class SVDataset3D(SVDataset2D):
-    def __init__(self, domdoc, modelid, samplerate):
-        SVDataset2D.__init__(self, domdoc, modelid, samplerate)
+    def __init__(self, domdoc, datasetid):
+        SVDataset2D.__init__(self, domdoc, datasetid)
         self.durations = []
+        self.dimensions = 3
 
     def set_data_from_iterable(self, frames, values, durations, labels=None):
         SVDataset2D.set_data_from_iterable(self, frames, values, labels)
@@ -114,6 +121,8 @@ class SVDataset3D(SVDataset2D):
         """
         Write the continuous  dataset using sonic visualiser xml conventions
         """
+        writer.write('%s<dataset id="%s" dimensions="%s">%s' % (indent, self.datasetid, self.dimensions, newl))
+        indent2 = addindent + indent
         for l, x, y, d in zip(self.labels, self.frames, self.values, self.durations):
-            writer.write('%s<point label="%s" frame="%d" value="%f" duration="%f"/>%s' % (indent, self.int2label[l], x, y, d, newl))
-
+            writer.write('%s<point label="%s" frame="%d" value="%f" duration="%d"/>%s' % (indent2, self.int2label[l], x, y, d, newl))
+        writer.write('%s</dataset>%s' % (indent, newl))

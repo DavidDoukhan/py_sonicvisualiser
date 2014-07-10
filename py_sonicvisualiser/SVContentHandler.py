@@ -50,10 +50,11 @@ class SVContentHandler(sax.ContentHandler):
 
         if name == 'dataset':
             dim = int(attrs.getValue('dimensions'))
+            dataid = attrs.getValue('id')
             if dim == 2:
-                self.datasets.append(SVDataset2D(self.dom, attrs.getValue('id'), self.samplerate))
+                self.datasets.append(SVDataset2D(self.dom, dataid, self.samplerate))
             elif dim == 3:
-                self.datasets.append(SVDataset3D(self.dom, attrs.getValue('id'), self.samplerate))
+                self.datasets.append(SVDataset3D(self.dom, dataid, self.samplerate))
         elif name == 'point':
             self.datasets[-1].append_point(attrs)
         elif name == 'sv':
