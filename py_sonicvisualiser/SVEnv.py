@@ -90,11 +90,12 @@ class SVEnv:
         except:
             # scipy cannot handle 24 bit wav files
             # and wave cannot handle 32 bit wav files
-            w = wave.open(wavpath)
-            samplerate = w.getframerate()
-            nframes = w.getnframes()
-        else:
-            raise Exception('Cannot decode wavefile ' + wavpath)
+            try:
+                w = wave.open(wavpath)
+                samplerate = w.getframerate()
+                nframes = w.getnframes()
+            except:
+                raise Exception('Cannot decode wavefile ' + wavpath)
 
         return SVEnv(samplerate, nframes, wavpath)
 
