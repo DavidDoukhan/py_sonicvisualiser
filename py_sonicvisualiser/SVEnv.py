@@ -34,6 +34,7 @@ import numpy as np
 from SVDataset import SVDataset2D, SVDataset3D
 from SVContentHandler import SVContentHandler
 import scipy.io.wavfile as SW
+import wave
 
 class SVEnv:
     """
@@ -83,8 +84,18 @@ class SVEnv:
           wavpath(str): the full path to the wavfile 
         """
 
-        samplerate, data =  SW.read(wavpath)
-        nframes = data.shape[0]
+        try:
+            samplerate, data =  SW.read(wavpath)
+            nframes = data.shape[0]
+        except:
+            # scipy cannot handle 24 bit wav files
+            # and wave cannot handle 32 bit wav files
+            w = wave.open(wavpath)
+            samplerate = w.getframerate()
+            nframes = w.getnframes()
+        else:
+            raise Exception('Cannot decode wavefile ' + wavpath)
+
         return SVEnv(samplerate, nframes, wavpath)
 
     @staticmethod
