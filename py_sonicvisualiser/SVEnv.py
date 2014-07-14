@@ -83,9 +83,7 @@ class SVEnv:
           wavpath(str): the full path to the wavfile 
         """
 
-        #w = wave.open(wavpath)       
-        # nchannels = w.getnchannels()
-        samplerate, data =  SW.read()
+        samplerate, data =  SW.read(wavpath)
         nframes = data.shape[0]
         return SVEnv(samplerate, nframes, wavpath)
 
