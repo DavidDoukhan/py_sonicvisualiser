@@ -47,7 +47,7 @@ setup(
         'setuptools',
 #        'xml',
 #        'bz2',
-#        'wave',
+        'wave',
         'numpy',
         'scipy'
         ],
