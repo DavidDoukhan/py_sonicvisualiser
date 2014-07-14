@@ -29,11 +29,11 @@ import xml.dom.minidom as minidom
 import xml.sax as sax
 from bz2 import BZ2File
 from os.path import basename
-import wave
+#import wave
 import numpy as np
 from SVDataset import SVDataset2D, SVDataset3D
 from SVContentHandler import SVContentHandler
-
+import scipy.io.wavfile as SW
 
 class SVEnv:
     """
@@ -83,10 +83,10 @@ class SVEnv:
           wavpath(str): the full path to the wavfile 
         """
 
-        w = wave.open(wavpath)       
+        #w = wave.open(wavpath)       
         # nchannels = w.getnchannels()
-        samplerate =  w.getframerate()       
-        nframes = w.getnframes()
+        samplerate, data =  SW.read()
+        nframes = data.shape[0]
         return SVEnv(samplerate, nframes, wavpath)
 
     @staticmethod
