@@ -1,3 +1,5 @@
 include versioneer.py
 include py_sonicvisualiser/_version.py
 include README.md
+include AUTHORS.md
+include LICENSE
