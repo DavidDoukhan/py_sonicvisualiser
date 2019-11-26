@@ -22,7 +22,7 @@
 
 import xml.sax as sax
 import xml.dom.minidom as minidom
-from SVDataset import SVDataset2D, SVDataset3D
+from .SVDataset import SVDataset2D, SVDataset3D
 
 class SVContentHandler(sax.ContentHandler):
     """
@@ -43,7 +43,7 @@ class SVContentHandler(sax.ContentHandler):
         if name in ['model', 'dataset', 'layer']:
             self.nbdata += 1
 
-        if name == 'model' and attrs.has_key('mainModel') and attrs.getValue('mainModel') == 'true':
+        if name == 'model' and 'mainModel' in attrs and attrs.getValue('mainModel') == 'true':
             self.samplerate = int(attrs.getValue('sampleRate'))
             self.nframes = int(attrs.getValue('end'))
             self.mediafile = attrs.getValue('file')
@@ -72,7 +72,7 @@ class SVContentHandler(sax.ContentHandler):
             elif name == 'window':
                 self.defwidth = int(attrs.getValue('width'))
 
-            for at, val in attrs.items():
+            for at, val in list(attrs.items()):
                 node.setAttribute(at, val)
             self.curnode = node
 

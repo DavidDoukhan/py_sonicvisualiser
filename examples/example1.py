@@ -14,7 +14,7 @@ specview = sve.add_spectrogram()
 
 # append a continuous annotation layer corresponding to a sinusoidal signal
 # on the spectrogram view previously defined
-x = np.array(range(10000, 20000, 5)) / 1000.
+x = np.array(list(range(10000, 20000, 5))) / 1000.
 sve.add_continuous_annotations(x, 1 + 3 * np.sin(2 * x), view=specview)
 
 # append a labelled interval annotation layer on a new view

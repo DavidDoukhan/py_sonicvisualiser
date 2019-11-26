@@ -57,19 +57,19 @@ class SVDataset2D(xml.dom.minidom.Text):
         :type y: iterable
         """
         if not isinstance(frames, collections.Iterable):
-            raise TypeError, "frames must be an iterable"
+            raise TypeError("frames must be an iterable")
         if not isinstance(values, collections.Iterable):
-            raise TypeError, "values must be an iterable"
+            raise TypeError("values must be an iterable")
         assert(len(frames) == len(values))
         self.frames = frames
         self.values = values
         if labels is None:
             self.label2int['New Point'] = 0
             self.int2label[0] = 'New Point'
-            self.labels = [0 for i in xrange(len(frames))]
+            self.labels = [0 for i in range(len(frames))]
         else:
             if not isinstance(labels, collections.Iterable):
-                raise TypeError, "labels must be an iterable"
+                raise TypeError("labels must be an iterable")
             for l in labels:
                 if l not in self.label2int:
                     self.label2int[l] = len(self.label2int)
@@ -111,7 +111,7 @@ class SVDataset3D(SVDataset2D):
     def set_data_from_iterable(self, frames, values, durations, labels=None):
         SVDataset2D.set_data_from_iterable(self, frames, values, labels)
         if not isinstance(durations, collections.Iterable):
-            raise TypeError, "durations must be an iterable"
+            raise TypeError("durations must be an iterable")
         assert(len(self.frames) == len(durations))
         self.durations = durations
 
