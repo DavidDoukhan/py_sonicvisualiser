@@ -31,8 +31,8 @@ from bz2 import BZ2File
 from os.path import basename
 #import wave
 import numpy as np
-from SVDataset import SVDataset2D, SVDataset3D
-from SVContentHandler import SVContentHandler
+from .SVDataset import SVDataset2D, SVDataset3D
+from .SVContentHandler import SVContentHandler
 import scipy.io.wavfile as SW
 import wave
 
