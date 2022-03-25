@@ -99,9 +99,6 @@ class SVDataset2D(xml.dom.minidom.Text):
             writer.write('%s<point label="%s" frame="%d" value="%f"/>%s' % (indent2, self.int2label[l], x, y, newl))
         writer.write('%s</dataset>%s' % (indent, newl))
 
-
-
-
 class SVDataset3D(SVDataset2D):
     def __init__(self, domdoc, datasetid, samplerate):
         SVDataset2D.__init__(self, domdoc, datasetid, samplerate)
@@ -128,3 +125,4 @@ class SVDataset3D(SVDataset2D):
         for l, x, y, d in zip(self.labels, self.frames, self.values, self.durations):
             writer.write('%s<point label="%s" frame="%d" value="%f" duration="%d"/>%s' % (indent2, self.int2label[l], x, y, d, newl))
         writer.write('%s</dataset>%s' % (indent, newl))
+

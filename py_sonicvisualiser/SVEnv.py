@@ -430,7 +430,6 @@ class SVEnv:
 
 if __name__ == '__main__':
     # SVEnv.parse('/home/david/test.sv')
-
     #import sys
     wavfname = '/vol/homedir/doukhan/BFMTV_BFMStory_2010-09-03_175900.wav'
     outsvenvfname = '/tmp/tutu.sv'
@@ -460,3 +459,4 @@ if __name__ == '__main__':
     sve2 = SVEnv.parse(outsvenvfname)
     sve2.add_continuous_annotations(x, 1 + 3 * np.cos(2 * x))
     sve2.save('/tmp/tutu2.sv')
+
