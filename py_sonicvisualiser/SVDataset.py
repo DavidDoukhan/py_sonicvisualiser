@@ -57,9 +57,9 @@ class SVDataset2D(xml.dom.minidom.Text):
         :type y: iterable
         """
         if not isinstance(frames, collections.Iterable):
-            raise TypeError, "frames must be an iterable"
+            raise TypeError("frames must be an iterable")
         if not isinstance(values, collections.Iterable):
-            raise TypeError, "values must be an iterable"
+            raise TypeError("values must be an iterable")
         assert(len(frames) == len(values))
         self.frames = frames
         self.values = values
@@ -69,7 +69,7 @@ class SVDataset2D(xml.dom.minidom.Text):
             self.labels = [0 for i in xrange(len(frames))]
         else:
             if not isinstance(labels, collections.Iterable):
-                raise TypeError, "labels must be an iterable"
+                raise TypeError("labels must be an iterable")
             for l in labels:
                 if l not in self.label2int:
                     self.label2int[l] = len(self.label2int)
@@ -99,9 +99,6 @@ class SVDataset2D(xml.dom.minidom.Text):
             writer.write('%s<point label="%s" frame="%d" value="%f"/>%s' % (indent2, self.int2label[l], x, y, newl))
         writer.write('%s</dataset>%s' % (indent, newl))
 
-
-
-
 class SVDataset3D(SVDataset2D):
     def __init__(self, domdoc, datasetid, samplerate):
         SVDataset2D.__init__(self, domdoc, datasetid, samplerate)
@@ -111,7 +108,7 @@ class SVDataset3D(SVDataset2D):
     def set_data_from_iterable(self, frames, values, durations, labels=None):
         SVDataset2D.set_data_from_iterable(self, frames, values, labels)
         if not isinstance(durations, collections.Iterable):
-            raise TypeError, "durations must be an iterable"
+            raise TypeError("durations must be an iterable")
         assert(len(self.frames) == len(durations))
         self.durations = durations
 
@@ -128,3 +125,4 @@ class SVDataset3D(SVDataset2D):
         for l, x, y, d in zip(self.labels, self.frames, self.values, self.durations):
             writer.write('%s<point label="%s" frame="%d" value="%f" duration="%d"/>%s' % (indent2, self.int2label[l], x, y, d, newl))
         writer.write('%s</dataset>%s' % (indent, newl))
+
