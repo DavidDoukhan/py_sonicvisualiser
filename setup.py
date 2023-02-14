@@ -37,11 +37,11 @@ setup(
   long_description = open('README.md').read(),
   author = "David Doukhan",
   author_email = "david.doukhan@gmail.com",
-#  version = '0.0.1',
+  version = '0.3.2',
 
    # versioneer
-  version=versioneer.get_version(),
-  cmdclass=versioneer.get_cmdclass(),
+  #version=versioneer.get_version(),
+  #cmdclass=versioneer.get_cmdclass(),
 
   install_requires = [
         'setuptools',
